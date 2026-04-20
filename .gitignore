@@ -1,0 +1,28 @@
+# Worktrees
+.worktrees/
+
+# Build artifacts
+.obj/
+*.o
+*.a
+simplesc
+run_tests
+
+# Assembly output
+*.asm
+*.out
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+*.gcov
+*.gcda
+*.gcno

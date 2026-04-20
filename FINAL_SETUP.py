@@ -1,4 +1,76 @@
-#include "lexer.h"
+#!/usr/bin/env python3
+"""
+Complete Lexer Implementation Setup - Task 1 & 2
+Organizes files and creates missing lexer implementation
+"""
+import os
+import shutil
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+print("=" * 70)
+print("SIMPLES Compiler - Complete Lexer Setup")
+print("=" * 70)
+
+# Create directories
+dirs = ['src', 'tests', 'examples', '.obj']
+for d in dirs:
+    os.makedirs(d, exist_ok=True)
+    print(f"✓ Directory: {d}/")
+
+# Move existing files to proper locations
+print("\n--- Organizing Existing Files ---")
+
+if os.path.exists('token.h'):
+    shutil.move('token.h', 'src/token.h')
+    print("✓ Moved token.h → src/token.h")
+
+if os.path.exists('test_lexer.c'):
+    shutil.move('test_lexer.c', 'tests/test_lexer.c')
+    print("✓ Moved test_lexer.c → tests/test_lexer.c")
+
+# ============================================================================
+# Create src/lexer.h if it doesn't exist
+# ============================================================================
+lexer_h_path = 'src/lexer.h'
+if not os.path.exists(lexer_h_path):
+    print("\n--- Creating src/lexer.h ---")
+    lexer_h = '''#ifndef LEXER_H
+#define LEXER_H
+
+#include "token.h"
+
+typedef struct {
+    const char *input;
+    size_t current;
+    size_t start;
+    int line;
+    int column;
+} Lexer;
+
+// Lexer functions
+Lexer *lexer_create(const char *input);
+void lexer_free(Lexer *lexer);
+
+// Tokenization
+TokenList *lexer_tokenize(const char *input);
+void token_list_free(TokenList *list);
+
+#endif
+'''
+    with open(lexer_h_path, 'w') as f:
+        f.write(lexer_h)
+    print("✓ Created src/lexer.h")
+else:
+    print("⚠ src/lexer.h already exists")
+
+# ============================================================================
+# Create src/lexer.c if it doesn't exist
+# ============================================================================
+lexer_c_path = 'src/lexer.c'
+if not os.path.exists(lexer_c_path):
+    print("\n--- Creating src/lexer.c ---")
+    lexer_c = '''#include "lexer.h"
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
@@ -29,7 +101,6 @@ static const struct {
     {"leia", TOK_LEIA},
     {"escreva", TOK_ESCREVA},
     {"escreval", TOK_ESCREVAL},
-    {"escreverln", TOK_ESCREVERLN},
     {"e", TOK_E},
     {"ou", TOK_OU},
     {"nao", TOK_NAO},
@@ -54,19 +125,19 @@ void lexer_free(Lexer *lexer) {
 }
 
 static char peek(Lexer *lexer) {
-    if (lexer->current >= strlen(lexer->input)) return '\0';
+    if (lexer->current >= strlen(lexer->input)) return '\\0';
     return lexer->input[lexer->current];
 }
 
 static char peek_next(Lexer *lexer) {
-    if (lexer->current + 1 >= strlen(lexer->input)) return '\0';
+    if (lexer->current + 1 >= strlen(lexer->input)) return '\\0';
     return lexer->input[lexer->current + 1];
 }
 
 static char advance(Lexer *lexer) {
     char c = peek(lexer);
     lexer->current++;
-    if (c == '\n') {
+    if (c == '\\n') {
         lexer->line++;
         lexer->column = 1;
     } else {
@@ -84,7 +155,7 @@ static void skip_whitespace(Lexer *lexer) {
 static Token make_token(Lexer *lexer, TokenType type) {
     Token token;
     token.type = type;
-    token.lexeme = (char *)(lexer->input + lexer->start);
+    token.lexeme = lexer->input + lexer->start;
     token.lexeme_len = lexer->current - lexer->start;
     token.line = lexer->line;
     token.column = lexer->column - (int)token.lexeme_len;
@@ -141,33 +212,32 @@ static Token scan_operator(Lexer *lexer) {
     char c = advance(lexer);
     
     switch (c) {
-        case '+': return make_token(lexer, TOK_PLUS);
+        case '+': return make_token(lexer, TOK_MAIS);
         case '*': return make_token(lexer, TOK_MULT);
-        case '(': return make_token(lexer, TOK_LPAREN);
-        case ')': return make_token(lexer, TOK_RPAREN);
-        case ',': return make_token(lexer, TOK_COMMA);
-        case ';': return make_token(lexer, TOK_SEMICOLON);
-        case '.': return make_token(lexer, TOK_PERIOD);
-        case '-': return make_token(lexer, TOK_MINUS);
+        case '(': return make_token(lexer, TOK_ABRE_PAR);
+        case ')': return make_token(lexer, TOK_FECHA_PAR);
+        case ',': return make_token(lexer, TOK_VIRGULA);
+        case ';': return make_token(lexer, TOK_PONTO_VIRGULA);
+        case '-': return make_token(lexer, TOK_MENOS);
         case '<':
             if (peek(lexer) == '-') {
                 advance(lexer);
                 return make_token(lexer, TOK_ATRIB);
             } else if (peek(lexer) == '>') {
                 advance(lexer);
-                return make_token(lexer, TOK_NEQ);
+                return make_token(lexer, TOK_DIFERENTE);
             } else if (peek(lexer) == '=') {
                 advance(lexer);
-                return make_token(lexer, TOK_LTE);
+                return make_token(lexer, TOK_MENOR_IGUAL);
             }
-            return make_token(lexer, TOK_LT);
+            return make_token(lexer, TOK_MENOR);
         case '>':
             if (peek(lexer) == '=') {
                 advance(lexer);
-                return make_token(lexer, TOK_GTE);
+                return make_token(lexer, TOK_MAIOR_IGUAL);
             }
-            return make_token(lexer, TOK_GT);
-        case '=': return make_token(lexer, TOK_EQ);
+            return make_token(lexer, TOK_MAIOR);
+        case '=': return make_token(lexer, TOK_IGUAL);
         default:
             return make_token(lexer, TOK_ERROR);
     }
@@ -176,13 +246,13 @@ static Token scan_operator(Lexer *lexer) {
 TokenList *lexer_tokenize(const char *input) {
     Lexer *lexer = lexer_create(input);
     TokenList *tokens = malloc(sizeof(TokenList));
-    tokens->tokens = malloc(sizeof(Token) * 100);
+    tokens->items = malloc(sizeof(Token) * 100);
     tokens->capacity = 100;
     tokens->count = 0;
     
-    while (peek(lexer) != '\0') {
+    while (peek(lexer) != '\\0') {
         skip_whitespace(lexer);
-        if (peek(lexer) == '\0') break;
+        if (peek(lexer) == '\\0') break;
         
         Token token;
         if (isdigit(peek(lexer))) {
@@ -195,10 +265,10 @@ TokenList *lexer_tokenize(const char *input) {
         
         if (tokens->count >= tokens->capacity) {
             tokens->capacity *= 2;
-            tokens->tokens = realloc(tokens->tokens, sizeof(Token) * tokens->capacity);
+            tokens->items = realloc(tokens->items, sizeof(Token) * tokens->capacity);
         }
         
-        tokens->tokens[tokens->count++] = token;
+        tokens->items[tokens->count++] = token;
     }
     
     // Add EOF token
@@ -211,23 +281,22 @@ TokenList *lexer_tokenize(const char *input) {
     
     if (tokens->count >= tokens->capacity) {
         tokens->capacity *= 2;
-        tokens->tokens = realloc(tokens->tokens, sizeof(Token) * tokens->capacity);
+        tokens->items = realloc(tokens->items, sizeof(Token) * tokens->capacity);
     }
     
-    tokens->tokens[tokens->count++] = eof_token;
+    tokens->items[tokens->count++] = eof_token;
     
     lexer_free(lexer);
     return tokens;
 }
 
 void token_list_free(TokenList *list) {
-    free(list->tokens);
+    free(list->items);
     free(list);
 }
 
 const char *token_type_name(TokenType type) {
     static const char *names[] = {
-        /* Keywords (27) */
         "TOK_PROGRAMA", "TOK_INICIO", "TOK_FIM", "TOK_INTEIRO",
         "TOK_FLUTUANTE", "TOK_VAZIO", "TOK_SE", "TOK_ENTAO",
         "TOK_SENAO", "TOK_FIMSE", "TOK_ENQUANTO", "TOK_FIMENQUANTO",
@@ -235,16 +304,44 @@ const char *token_type_name(TokenType type) {
         "TOK_FACA", "TOK_FIMPARA", "TOK_LEIA", "TOK_ESCREVA",
         "TOK_ESCREVAL", "TOK_E", "TOK_OU", "TOK_NAO",
         "TOK_DIV", "TOK_PROCEDIMENTO", "TOK_RETORNA",
-        /* Operators (14) */
-        "TOK_ATRIB", "TOK_PLUS", "TOK_MINUS", "TOK_MULT",
-        "TOK_GT", "TOK_LT", "TOK_EQ", "TOK_NEQ",
-        "TOK_GTE", "TOK_LTE", "TOK_LPAREN", "TOK_RPAREN",
-        "TOK_COMMA", "TOK_SEMICOLON",
-        /* Literals (3) */
+        "TOK_ATRIB", "TOK_MAIS", "TOK_MENOS", "TOK_MULT",
+        "TOK_MAIOR", "TOK_MENOR", "TOK_IGUAL", "TOK_DIFERENTE",
+        "TOK_MAIOR_IGUAL", "TOK_MENOR_IGUAL", "TOK_ABRE_PAR", "TOK_FECHA_PAR",
+        "TOK_VIRGULA", "TOK_PONTO_VIRGULA",
         "TOK_ID", "TOK_NUM_INT", "TOK_NUM_FLOAT",
-        /* Special (2) */
-        "TOK_EOF", "TOK_ERROR"
+        "TOK_EOF", "TOK_ERROR", "TOK_COUNT"
     };
     if (type < TOK_COUNT) return names[type];
     return "UNKNOWN";
 }
+'''
+    with open(lexer_c_path, 'w') as f:
+        f.write(lexer_c)
+    print("✓ Created src/lexer.c")
+else:
+    print("⚠ src/lexer.c already exists")
+
+print("\n" + "=" * 70)
+print("✅ LEXER PHASE SETUP COMPLETE!")
+print("=" * 70)
+print("\nProject structure:")
+print("  src/")
+print("    ├── token.h ✓")
+print("    ├── lexer.h ✓")
+print("    └── lexer.c ✓")
+print("  tests/")
+print("    └── test_lexer.c ✓")
+print("  Makefile ✓")
+print("  .gitignore ✓")
+
+print("\n" + "=" * 70)
+print("Next steps:")
+print("=" * 70)
+print("\n1. Test the build:")
+print("   make clean test")
+print("\n2. You should see:")
+print("   'test_lexer_single_integer... PASS'")
+print("\n3. Commit your work:")
+print("   git add src/ tests/ Makefile")
+print("   git commit -m \"feat: complete lexer phase implementation\"")
+print("\n" + "=" * 70)

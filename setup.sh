@@ -1,10 +1,18 @@
+#!/bin/bash
+# This script will set up the project structure
+
+# Create directories
+mkdir -p src tests unity
+
+# Create src/token.h
+cat > src/token.h << 'EOF'
 #ifndef TOKEN_H
 #define TOKEN_H
 
 #include <stddef.h>
 
 typedef enum {
-    /* Keywords (28) */
+    /* Keywords (27) */
     TOK_PROGRAMA,
     TOK_INICIO,
     TOK_FIM,
@@ -26,7 +34,6 @@ typedef enum {
     TOK_LEIA,
     TOK_ESCREVA,
     TOK_ESCREVAL,
-    TOK_ESCREVERLN,
     TOK_E,
     TOK_OU,
     TOK_NAO,
@@ -49,7 +56,6 @@ typedef enum {
     TOK_RPAREN,         /* ) */
     TOK_COMMA,          /* , */
     TOK_SEMICOLON,      /* ; */
-    TOK_PERIOD,         /* . */
     
     /* Literals and Identifiers (3) */
     TOK_ID,
@@ -58,10 +64,7 @@ typedef enum {
     
     /* Special (2) */
     TOK_EOF,
-    TOK_ERROR,
-    
-    /* End marker for array sizing */
-    TOK_COUNT
+    TOK_ERROR
 } TokenType;
 
 typedef union {
@@ -89,3 +92,44 @@ const char *token_type_name(TokenType type);
 void token_list_free(TokenList *list);
 
 #endif /* TOKEN_H */
+EOF
+
+# Create tests/test_lexer.c
+cat > tests/test_lexer.c << 'EOF'
+#include "unity.h"
+#include "../src/lexer.h"
+
+void setUp(void) {
+    /* Empty setup for now */
+}
+
+void tearDown(void) {
+    /* Empty teardown for now */
+}
+
+void test_lexer_single_integer(void) {
+    TokenList *tokens = lexer_tokenize("42");
+    
+    TEST_ASSERT_NOT_NULL(tokens);
+    TEST_ASSERT_EQUAL_INT(2, tokens->count);
+    
+    /* First token should be NUM_INT */
+    TEST_ASSERT_EQUAL_INT(TOK_NUM_INT, tokens->tokens[0].type);
+    TEST_ASSERT_EQUAL_INT(42, tokens->tokens[0].value.int_value);
+    
+    /* Second token should be EOF */
+    TEST_ASSERT_EQUAL_INT(TOK_EOF, tokens->tokens[1].type);
+    
+    token_list_free(tokens);
+}
+
+int main(void) {
+    return unity_main();
+}
+EOF
+
+echo "Project setup complete!"
+echo "Files created:"
+echo "- src/token.h"
+echo "- tests/test_lexer.c"
+echo "- Makefile (already created)"
