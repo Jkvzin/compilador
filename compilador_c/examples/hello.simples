@@ -1,0 +1,6 @@
+programa hello
+inteiro x;
+inicio
+x <- 42;
+escreval x;
+fim.

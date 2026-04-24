@@ -1,0 +1,7 @@
+programa FloatTest
+flutuante y;
+inicio
+y <- 1.5;
+y <- y * 2.0;
+escreva y;
+fim.

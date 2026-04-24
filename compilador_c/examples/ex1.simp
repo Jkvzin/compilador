@@ -1,0 +1,6 @@
+programa Teste
+inteiro x;
+inicio
+x <- 42;
+escreva x;
+fim.

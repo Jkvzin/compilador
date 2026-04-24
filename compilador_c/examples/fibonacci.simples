@@ -1,0 +1,21 @@
+programa fibonacci
+inteiro n, a, b, temp, i;
+inicio
+leia n;
+a <- 0;
+b <- 1;
+se n = 0 entao
+    escreval a;
+senao
+    se n = 1 entao
+        escreval b;
+    senao
+        para i de 2 ate n passo 1 faca
+            temp <- a + b;
+            a <- b;
+            b <- temp;
+        fimpara
+        escreval b;
+    fimse
+fimse
+fim.
